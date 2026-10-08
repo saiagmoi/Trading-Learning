@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "note": "Catálogo inicial. Agregá instrumentos acá o buscálos; el buscador también puede incorporar cotizaciones de Yahoo.",
+  "assets": [
+    {
+      "id": "AAPL",
+      "symbol": "AAPL",
+      "yahooSymbol": "AAPL",
+      "name": "Apple Inc.",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "MSFT",
+      "symbol": "MSFT",
+      "yahooSymbol": "MSFT",
+      "name": "Microsoft Corporation",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "NVDA",
+      "symbol": "NVDA",
+      "yahooSymbol": "NVDA",
+      "name": "NVIDIA Corporation",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "AMZN",
+      "symbol": "AMZN",
+      "yahooSymbol": "AMZN",
+      "name": "Amazon.com, Inc.",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "GOOGL",
+      "symbol": "GOOGL",
+      "yahooSymbol": "GOOGL",
+      "name": "Alphabet Inc. (Clase A)",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "META",
+      "symbol": "META",
+      "yahooSymbol": "META",
+      "name": "Meta Platforms, Inc.",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "TSLA",
+      "symbol": "TSLA",
+      "yahooSymbol": "TSLA",
+      "name": "Tesla, Inc.",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "KO",
+      "symbol": "KO",
+      "yahooSymbol": "KO",
+      "name": "The Coca-Cola Company",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NYSE"
+    },
+    {
+      "id": "BRK.B",
+      "symbol": "BRK.B",
+      "yahooSymbol": "BRK-B",
+      "name": "Berkshire Hathaway Inc. (Clase B)",
+      "type": "stock",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NYSE"
+    },
+    {
+      "id": "SPY",
+      "symbol": "SPY",
+      "yahooSymbol": "SPY",
+      "name": "SPDR S&P 500 ETF Trust",
+      "type": "etf",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "ARCA"
+    },
+    {
+      "id": "QQQ",
+      "symbol": "QQQ",
+      "yahooSymbol": "QQQ",
+      "name": "Invesco QQQ Trust",
+      "type": "etf",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "NASDAQ"
+    },
+    {
+      "id": "DIA",
+      "symbol": "DIA",
+      "yahooSymbol": "DIA",
+      "name": "SPDR Dow Jones Industrial Average ETF",
+      "type": "etf",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "ARCA"
+    },
+    {
+      "id": "IWM",
+      "symbol": "IWM",
+      "yahooSymbol": "IWM",
+      "name": "iShares Russell 2000 ETF",
+      "type": "etf",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "ARCA"
+    },
+    {
+      "id": "GGAL",
+      "symbol": "GGAL",
+      "yahooSymbol": "GGAL.BA",
+      "name": "Grupo Financiero Galicia",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "PAMP",
+      "symbol": "PAMP",
+      "yahooSymbol": "PAMP.BA",
+      "name": "Pampa Energía",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "YPFD",
+      "symbol": "YPFD",
+      "yahooSymbol": "YPFD.BA",
+      "name": "YPF S.A.",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "BMA",
+      "symbol": "BMA",
+      "yahooSymbol": "BMA.BA",
+      "name": "Banco Macro",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "SUPV",
+      "symbol": "SUPV",
+      "yahooSymbol": "SUPV.BA",
+      "name": "Grupo Supervielle",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "CEPU",
+      "symbol": "CEPU",
+      "yahooSymbol": "CEPU.BA",
+      "name": "Central Puerto",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "TXAR",
+      "symbol": "TXAR",
+      "yahooSymbol": "TXAR.BA",
+      "name": "Ternium Argentina",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "ALUA",
+      "symbol": "ALUA",
+      "yahooSymbol": "ALUA.BA",
+      "name": "Aluar Aluminio Argentino",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "BYMA",
+      "symbol": "BYMA",
+      "yahooSymbol": "BYMA.BA",
+      "name": "Bolsas y Mercados Argentinos",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    },
+    {
+      "id": "COME",
+      "symbol": "COME",
+      "yahooSymbol": "COME.BA",
+      "name": "Sociedad Comercial del Plata",
+      "type": "stock",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "BYMA"
+    }
+  ],
+  "indices": [
+    {
+      "id": "SPX",
+      "symbol": "SPX",
+      "yahooSymbol": "^GSPC",
+      "name": "S&P 500",
+      "type": "index",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "INDEX"
+    },
+    {
+      "id": "IXIC",
+      "symbol": "IXIC",
+      "yahooSymbol": "^IXIC",
+      "name": "Nasdaq Composite",
+      "type": "index",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "INDEX"
+    },
+    {
+      "id": "DJI",
+      "symbol": "DJI",
+      "yahooSymbol": "^DJI",
+      "name": "Dow Jones Industrial Average",
+      "type": "index",
+      "market": "US",
+      "currency": "USD",
+      "exchange": "INDEX"
+    },
+    {
+      "id": "MERV",
+      "symbol": "MERV",
+      "yahooSymbol": "^MERV",
+      "name": "S&P Merval",
+      "type": "index",
+      "market": "AR",
+      "currency": "ARS",
+      "exchange": "INDEX"
+    }
+  ],
+  "benchmarks": {
+    "sp500": "SPY",
+    "nasdaq": "QQQ",
+    "merval": "MERV"
+  }
+}

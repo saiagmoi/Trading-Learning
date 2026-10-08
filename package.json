@@ -9,9 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "lightweight-charts": "^5.2.1",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "yahoo-finance2": "^4.0.3",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
