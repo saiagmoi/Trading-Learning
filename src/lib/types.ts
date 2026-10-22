@@ -91,6 +91,8 @@ export interface Order {
   fillPrice?: number;
   commission?: number;
   rejectReason?: string;
+  reservedCash?: number;
+  timeInForce?: "gtc";
 }
 
 export interface Trade {

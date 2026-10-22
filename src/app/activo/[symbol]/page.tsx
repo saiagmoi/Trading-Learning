@@ -7,7 +7,7 @@ import { TradeTicket } from "@/components/TradeTicket";
 import { fetchNews, fetchQuotes } from "@/lib/api";
 import { findAsset } from "@/lib/assets";
 import { formatDateTime, formatMoney, formatNumber, formatPercent, formatVolume, pnlClass } from "@/lib/format";
-import { getMarketHours } from "@/lib/market/hours";
+import { useMarketSession } from "@/hooks/useMarketSession";
 import type { QuoteNewsItem } from "@/lib/types";
 import { useSimulation } from "@/store/simulation-store";
 
@@ -20,7 +20,7 @@ export default function AssetPage({ params }: { params: Promise<{ symbol: string
   const watch = useSimulation((s) => s.portfolio.watchlist.some((w) => w.symbol === symbol));
   const toggle = useSimulation((s) => s.toggleWatch);
   const beginner = useSimulation((s) => s.profile?.beginnerMode);
-  const hours = getMarketHours(asset?.market ?? "US");
+  const hours = useMarketSession(asset?.market ?? "US");
   const [news, setNews] = useState<QuoteNewsItem[] | null>(null);
 
   useEffect(() => {

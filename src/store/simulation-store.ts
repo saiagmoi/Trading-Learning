@@ -46,7 +46,7 @@ export interface AppState {
   setFx: (rate: number, at: string, source: string) => void;
   buyMarket: (symbol: string, qty: number) => void;
   sellMarket: (symbol: string, qty: number) => void;
-  preview: (symbol: string, side: "buy" | "sell", qty: number) => ReturnType<typeof previewOrder>;
+  preview: (symbol: string, side: "buy" | "sell", qty: number, order?: { type: OrderType; limitPrice?: number; stopPrice?: number }) => ReturnType<typeof previewOrder>;
   placeOrder: (input: {
     symbol: string;
     side: "buy" | "sell";
@@ -200,6 +200,7 @@ export const useSimulation = create<AppState>()(
             q.price,
             config,
             profile?.realismLevel ?? "beginner",
+            { quote: q },
           );
           set({ portfolio: res.portfolio, error: null });
         } catch (e) {
@@ -224,6 +225,7 @@ export const useSimulation = create<AppState>()(
             q.price,
             config,
             profile?.realismLevel ?? "beginner",
+            { quote: q },
           );
           set({ portfolio: res.portfolio, error: null });
         } catch (e) {
@@ -231,11 +233,16 @@ export const useSimulation = create<AppState>()(
         }
       },
 
-      preview: (symbol, side, qty) => {
+      preview: (symbol, side, qty, order) => {
         const { portfolio, lastQuotes, profile, customCommissions } = get();
         const q = lastQuotes[symbol];
         if (!q) throw new Error("Sin cotización.");
         const config = getActiveCommission(profile, customCommissions);
+        if (order && order.type !== "market") {
+          placeWorkingOrder(portfolio, { symbol, side, quantity: qty, ...order }, config);
+          const reference = order.type === "stop" ? q.price : order.limitPrice!;
+          return previewOrder(portfolio, symbol, side, qty, reference, { ...config, spreadBps: 0, slippageBps: 0 });
+        }
         return previewOrder(
           portfolio,
           symbol,
@@ -260,16 +267,6 @@ export const useSimulation = create<AppState>()(
         }
         try {
           const config = getActiveCommission(profile, customCommissions);
-          if (input.side === "sell") {
-            previewOrder(
-              portfolio,
-              input.symbol,
-              "sell",
-              input.quantity,
-              q.price,
-              config,
-            );
-          }
           set({
             portfolio: placeWorkingOrder(portfolio, {
               symbol: input.symbol,
@@ -278,7 +275,7 @@ export const useSimulation = create<AppState>()(
               quantity: input.quantity,
               limitPrice: input.limitPrice,
               stopPrice: input.stopPrice,
-            }),
+            }, config),
             error: null,
           });
         } catch (e) {

@@ -1,3 +1,4 @@
+import { matchPendingOrders } from "@/lib/simulation/engine";
 import { getCatalogAssets } from "@/lib/assets";
 import { getMarketDataProvider } from "@/lib/market/factory";
 import { getMarketHours } from "@/lib/market/hours";
@@ -48,6 +49,14 @@ async function evidence(c: Competition): Promise<AgentEvidence> {
   }));
   return { observedAt: new Date().toISOString(), quotes: c.quotes, histories, news };
 }
+export function matchCompetitionPending(c: Competition) {
+  const before = c.portfolios.you;
+  const matched = matchPendingOrders(before, c.quotes, c.commission, "realistic");
+  const ids = new Set(before.trades.map((t) => t.id));
+  for (const t of matched.trades.filter((t) => !ids.has(t.id))) logDecision(c, "you", t.side, "Orden pendiente ejecutada en rueda regular respetando el precio límite.", { symbol: t.symbol, quantity: t.quantity, price: t.price, commission: t.commission });
+  for (const o of matched.orders.filter((o) => o.status === "rejected" && before.orders.some((b) => b.id === o.id && b.status === "pending"))) logDecision(c, "you", "error", o.rejectReason ?? "La orden pendiente fue rechazada.");
+  c.portfolios.you = matched;
+}
 export async function review(c: Competition, now = new Date()) {
   if (c.status !== "active") return c;
   if (now.getTime() >= new Date(c.endsAt).getTime()) {
@@ -70,6 +79,7 @@ export async function review(c: Competition, now = new Date()) {
     await writeCompetition(c); return c;
   }
   await refresh(c);
+  matchCompetitionPending(c);
   if (!c.portfolios.spy.trades.length) {
     const quote = c.quotes.find((q) => q.symbol === "SPY")!;
     const qty = buyWithinBudget(c.portfolios.spy, "SPY", c.initialCapital, quote, c.commission);

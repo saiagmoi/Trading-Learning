@@ -36,9 +36,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [menu, setMenu] = useState(false);
 
   useEffect(() => {
-    fetchStatus()
-      .then((s) => setOpen({ us: s.us.isOpen, ar: s.ar.isOpen }))
-      .catch(() => setOpen(null));
+    let cancelled = false;
+    const update = () => fetchStatus()
+      .then((s) => { if (!cancelled) setOpen({ us: s.us.isOpen, ar: s.ar.isOpen }); })
+      .catch(() => { if (!cancelled) setOpen(null); });
+    void update();
+    const timer = setInterval(update, 30_000);
+    return () => { cancelled = true; clearInterval(timer); };
   }, []);
 
   return (

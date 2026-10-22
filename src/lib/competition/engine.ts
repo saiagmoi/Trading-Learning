@@ -69,13 +69,7 @@ export function trade(c: Competition, who: ParticipantId, symbol: string, side: 
   if (!quote || !freshQuote(quote, now)) throw new Error("Sin precio reciente válido. Se conserva la cartera.");
   if (!Number.isFinite(quantity) || quantity <= 0) throw new Error("Ingresá una cantidad válida mayor a cero.");
   if (side === "sell" && applyExecution(quote.price, quantity, side, "USD", "US", c.commission).total < 0) throw new Error("La venta no cubre la comisión mínima. Se conserva la posición.");
-  const res = executeMarket(c.portfolios[who], symbol, side, quantity, quote.price, c.commission, "realistic");
-  if (side === "buy") {
-    const before = c.portfolios[who].positions.find((p) => p.symbol === symbol);
-    const after = res.portfolio.positions.find((p) => p.symbol === symbol)!;
-    // Competition positions include entry fees in their cost basis.
-    after.averagePrice = ((before ? before.averagePrice * before.quantity : 0) + res.trade.total) / after.quantity;
-  }
+  const res = executeMarket(c.portfolios[who], symbol, side, quantity, quote.price, c.commission, "realistic", { quote, now: new Date(now) });
   c.portfolios[who] = res.portfolio;
   logDecision(c, who, side, reason, { symbol, quantity, price: res.trade.price, commission: res.trade.commission });
 }

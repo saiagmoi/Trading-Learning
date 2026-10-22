@@ -10,7 +10,8 @@
     "competition:worker": "node --env-file-if-exists=.env.local scripts/competition-worker.mjs",
     "test:competition": "node scripts/test-competition.cjs",
     "competition:tick": "node scripts/competition-tick.cjs",
-    "test:competition:cloud": "node scripts/test-competition-cloud.cjs"
+    "test:competition:cloud": "node scripts/test-competition-cloud.cjs",
+    "test:trading": "node scripts/test-trading.cjs"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.2",

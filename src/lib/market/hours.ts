@@ -23,6 +23,9 @@ const US_HOLIDAYS = new Set([
   "2026-12-25",
 ]);
 
+// NYSE/Nasdaq published regular-session early closes.
+const US_EARLY_CLOSE = new Set(["2025-07-03", "2025-11-28", "2025-12-24", "2026-11-27", "2026-12-24"]);
+
 const AR_HOLIDAYS = new Set([
   "2025-01-01",
   "2025-03-03",
@@ -109,14 +112,16 @@ export function getMarketHours(market: Market, now = new Date()): MarketHoursSta
     const minutes = h * 60 + m;
     const holiday = US_HOLIDAYS.has(day);
     const weekdayOk = weekday >= 1 && weekday <= 5;
-    const session = minutes >= 9 * 60 + 30 && minutes < 16 * 60;
+    const closingHour = US_EARLY_CLOSE.has(day) ? 13 : 16;
+    const calendarKnown = Number(day.slice(0, 4)) >= 2025 && Number(day.slice(0, 4)) <= 2026;
+    const session = calendarKnown && minutes >= 9 * 60 + 30 && minutes < closingHour * 60;
     const isOpen = weekdayOk && !holiday && session;
     return {
       market,
       isOpen,
       label: isOpen ? "Mercado abierto" : "Mercado cerrado",
       timeZone: tz,
-      nextHint: "NYSE / Nasdaq · 9:30–16:00 (hora de Nueva York), días hábiles.",
+      nextHint: calendarKnown ? `NYSE / Nasdaq · 9:30–${closingHour}:00 (Nueva York), rueda regular${US_EARLY_CLOSE.has(day) ? "; cierre anticipado" : ""}.` : "Calendario fuera del período verificado: operaciones bloqueadas hasta actualizarlo.",
     };
   }
   const tz = "America/Argentina/Buenos_Aires";
@@ -125,13 +130,14 @@ export function getMarketHours(market: Market, now = new Date()): MarketHoursSta
   const minutes = h * 60 + m;
   const holiday = AR_HOLIDAYS.has(day);
   const weekdayOk = weekday >= 1 && weekday <= 5;
-  const session = minutes >= 11 * 60 && minutes < 17 * 60;
+  const calendarKnown = Number(day.slice(0, 4)) >= 2025 && Number(day.slice(0, 4)) <= 2026;
+  const session = calendarKnown && minutes >= 10 * 60 + 30 && minutes < 17 * 60;
   const isOpen = weekdayOk && !holiday && session;
   return {
     market,
     isOpen,
     label: isOpen ? "Mercado abierto" : "Mercado cerrado",
     timeZone: tz,
-    nextHint: "BYMA · 11:00–17:00 (hora de Buenos Aires), días hábiles. Horario aproximado.",
+    nextHint: calendarKnown ? "BYMA · rueda regular de acciones: 10:30–17:00 (Buenos Aires), excluye subastas y sesión extendida. Calendario programado; no detecta suspensiones extraordinarias." : "Calendario fuera del período verificado: operaciones bloqueadas hasta actualizarlo.",
   };
 }

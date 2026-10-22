@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMarketDataProvider } from "@/lib/market/factory";
 import { getMarketHours } from "@/lib/market/hours";
+import { cancelOrder, placeWorkingOrder } from "@/lib/simulation/engine";
 import { createCompetition, freshQuote, logDecision, snapshot, trade } from "@/lib/competition/engine";
 import { nextTradingEvaluation } from "@/lib/competition/schedule";
-import { connection, refresh, review, universe, view } from "@/lib/competition/service";
+import { connection, refresh, review, universe, view, matchCompetitionPending } from "@/lib/competition/service";
 import { canMutate, hasOwnerAccess, isLocalRequest } from "@/lib/competition/access";
 import { exclusive, readCompetition, writeCompetition, storageStatus } from "@/lib/competition/storage";
 
@@ -53,7 +54,12 @@ export async function POST(req: NextRequest) {
       }
       if (!c) throw new Error("Primero iniciá la ronda.");
       if (input.action === "review") return NextResponse.json(responseView(req, await review(c)));
-      if (input.action === "pause" || input.action === "resume") {
+      if (input.action === "cancel") {
+        const pending = c.portfolios.you.orders.find((o) => o.id === input.orderId && o.status === "pending");
+        if (!pending) throw new Error("La orden ya no está pendiente.");
+        c.portfolios.you = cancelOrder(c.portfolios.you, pending.id);
+        logDecision(c, "you", "hold", `Cancelé la orden límite de ${pending.symbol}. Se liberó el saldo o las unidades reservadas.`);
+      } else if (input.action === "pause" || input.action === "resume") {
         if (c.status === "finished") throw new Error("La ronda ya terminó.");
         c.status = input.action === "pause" ? "paused" : "active";
         c.notice = input.action === "pause" ? "Ronda pausada: no se ejecutan operaciones. El plazo de 6 semanas sigue corriendo." : "Ronda reanudada. Se evaluará en la próxima actualización con mercado abierto.";
@@ -64,14 +70,26 @@ export async function POST(req: NextRequest) {
         if (!reason || reason.length > 1000) throw new Error("Escribí tu motivo, con un máximo de 1.000 caracteres.");
         if (input.action === "hold") logDecision(c, "you", "hold", reason);
         else {
-          if (c.scheduledFor && Date.now() < new Date(c.scheduledFor).getTime()) throw new Error("La ronda está programada: las operaciones se habilitan en la fecha inicial a las 12:00 de Argentina.");
-          if (!getMarketHours("US").isOpen) throw new Error("Mercado cerrado. Podés esperar y operar en la próxima rueda.");
+
           if (!["buy", "sell"].includes(input.side) || !universe().some((a) => a.symbol === input.symbol)) throw new Error("Elegí una operación y un activo del catálogo de EE.UU.");
-          await refresh(c);
-          const q = c.quotes.find((q) => q.symbol === input.symbol);
-          if (!q || !freshQuote(q)) throw new Error("Sin cotización reciente para ese activo.");
-          trade(c, "you", input.symbol, input.side, input.quantity, reason);
-          snapshot(c);
+          const orderType = input.orderType ?? "market";
+          if (!["market", "limit"].includes(orderType)) throw new Error("Elegí orden de mercado o límite.");
+          if (orderType === "limit") {
+            c.portfolios.you = placeWorkingOrder(c.portfolios.you, { symbol: input.symbol, side: input.side, type: "limit", quantity: input.quantity, limitPrice: input.limitPrice }, c.commission);
+            logDecision(c, "you", "review", `Envié una orden límite GTC de ${input.side === "buy" ? "compra" : "venta"} de ${input.quantity} ${input.symbol} a USD ${input.limitPrice}. ${reason}`);
+            if (getMarketHours("US").isOpen && (!c.scheduledFor || Date.now() >= new Date(c.scheduledFor).getTime())) {
+              try { await refresh(c); matchCompetitionPending(c); snapshot(c); }
+              catch { c.notice = "Orden límite guardada. Espera una cotización válida de la rueda regular para evaluar su ejecución."; }
+            }
+          } else {
+            if (c.scheduledFor && Date.now() < new Date(c.scheduledFor).getTime()) throw new Error("La ronda está programada: las operaciones se habilitan en la fecha inicial a las 12:00 de Argentina.");
+            if (!getMarketHours("US").isOpen) throw new Error("Mercado cerrado: las órdenes de mercado no se ejecutan. Podés enviar una orden límite pendiente.");
+            await refresh(c);
+            const q = c.quotes.find((q) => q.symbol === input.symbol);
+            if (!q || !freshQuote(q)) throw new Error("Sin cotización reciente para ese activo.");
+            trade(c, "you", input.symbol, input.side, input.quantity, reason);
+            snapshot(c);
+          }
         }
       } else throw new Error("Acción desconocida.");
       await writeCompetition(c);

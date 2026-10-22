@@ -270,3 +270,46 @@ las carteras publicadas.
 Pruebas de producción sin servicios externos: `npm run test:competition:cloud`.
 Documentación: [almacenamiento privado](https://vercel.com/docs/vercel-blob/private-storage)
 y [tareas programadas](https://vercel.com/docs/cron-jobs/manage-cron-jobs).
+
+
+## Ejecución de órdenes: mercado y límite
+
+El simulador opera únicamente en rueda regular. El motor compartido valida el horario
+antes de toda compra o venta, tanto en práctica como en competencia y agentes. No basta
+con deshabilitar el botón: también se valida al confirmar y al ejecutar órdenes pendientes.
+No se permiten ejecuciones con cotizaciones inválidas, de más de 30 minutos, futuras o
+fuera de la rueda regular. El precio de la víspera no habilita compras en la apertura.
+
+- **Mercado:** ejecución al precio disponible simulado con spread y deslizamiento,
+  más comisión. El precio mostrado es estimativo, no un precio garantizado. Con mercado
+  cerrado la ejecución se rechaza; no se inventa una operación al último cierre.
+- **Límite:** compra a ese precio o menor; venta a ese precio o mayor. La comparación
+  se hace con el precio de ejecución después del spread y deslizamiento. Las comisiones
+  se contabilizan aparte. Si no cumple, sigue pendiente; no se fuerza el precio al límite.
+- **GTC:** las órdenes pendientes permanecen hasta ejecución o cancelación y solo
+  participan en rueda regular. Pueden enviarse con el mercado cerrado, sin comprar ni vender.
+- **Reservas:** las compras límite reservan efectivo al límite más comisión; las ventas
+  pendientes reservan unidades. Una segunda orden no puede volver a usar esas reservas.
+  La cancelación las libera. Las órdenes simultáneas stop/take-profit no forman un OCO;
+  no se permiten dos ventas de las mismas unidades.
+- **Stop loss:** solo venta de una posición; al activarse se ejecuta como mercado, por
+  lo que una caída brusca puede vender debajo del precio stop. Take profit es una venta
+  límite, sin promesa de ejecución inmediata.
+
+La competencia incluye selector Mercado/Límite, precio límite y cancelación de pendientes.
+Las pendientes se revisan con cada actualización de la competencia y con el cron diario;
+la cartera de práctica las revisa al recibir cotizaciones en el navegador. **No se
+reconstruyen cruces de precio ocurridos entre observaciones**. El precio retrasado, la
+falta de libro de órdenes, las ejecuciones parciales, la prioridad real, las suspensiones
+extraordinarias y la liquidación bursátil siguen sin reproducirse: no es idéntico a un broker.
+
+El calendario programado 2025–2026 incluye feriados conocidos, horario de Nueva York
+con cambio estacional y cierres anticipados de acciones de EE.UU. a las 13:00 de Nueva
+York en las fechas publicadas. Fuera de ese período se bloquea la ejecución hasta
+actualizarlo. BYMA usa una sesión conservadora de acciones de 10:30 a 17:00; no modela
+subastas ni extensiones. Referencias: [tipos de órdenes](https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders),
+[calendario Nasdaq](https://www.nasdaqtrader.com/trader.aspx?id=Calendar) y
+[horarios BYMA](https://www.byma.com.ar/mercado/horarios).
+
+Pruebas sin red: `npm run test:trading`, `npm run test:competition`,
+`npm run test:competition:cloud`.

@@ -15,6 +15,9 @@ require.extensions['.ts'] = function (module, filename) {
 };
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'competition-test-'));
 process.env.COMPETITION_DATA_DIR = temp;
+const fixtureHours = require('../src/lib/market/hours.ts');
+const realMarketHours = fixtureHours.getMarketHours;
+fixtureHours.getMarketHours = () => ({ isOpen: true });
 const e = require('../src/lib/competition/engine.ts');
 const { askAgent } = require('../src/lib/competition/agent.ts');
 const storage = require('../src/lib/competition/storage.ts');
@@ -105,6 +108,7 @@ function competition() { const c = e.createCompetition(10000, 'test-model', 'yah
   await assert.rejects(() => askAgent('patient', competition(), { observedAt: '', quotes: [], histories: {}, news: {} }), /429/);
   global.fetch = realFetch; delete process.env.OPENAI_API_KEY; passed++; console.log('✓ Structured AI response and provider failures are handled without external calls');
   const schedule = require('../src/lib/competition/schedule.ts');
+  fixtureHours.getMarketHours = realMarketHours;
   test('Closed-market creation schedules the next trading day at noon, skipping weekends and holidays', () => {
     assert.equal(schedule.nextTradingEvaluation(new Date('2026-10-22T22:00:00Z')).toISOString(), '2026-10-23T15:00:00.000Z');
     assert.equal(schedule.nextTradingEvaluation(new Date('2026-10-23T22:00:00Z')).toISOString(), '2026-10-26T15:00:00.000Z');
@@ -114,7 +118,7 @@ function competition() { const c = e.createCompetition(10000, 'test-model', 'yah
   });
   const reviewTime = new Date(`${schedule.argentinaDay(new Date())}T12:00:00-03:00`);
   // Review orchestration: no calls while closed, duplicate attempts, or after the end.
-  const hours = require('../src/lib/market/hours.ts'); const actualHours = hours.getMarketHours; const factory = require('../src/lib/market/factory.ts');
+  const hours = require('../src/lib/market/hours.ts'); const actualHours = realMarketHours; const factory = require('../src/lib/market/factory.ts');
   const agentModule = require('../src/lib/competition/agent.ts'); const service = require('../src/lib/competition/service.ts');
   process.env.OPENAI_API_KEY = 'test'; process.env.OPENAI_MODEL = 'test-model';
   hours.getMarketHours = () => ({ isOpen: false });
