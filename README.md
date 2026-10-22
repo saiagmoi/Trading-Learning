@@ -148,3 +148,81 @@ La aplicación implementa el patrón **Factory** y una interfaz abstracta:
    }
    ```
 3. Configurá `MARKET_DATA_PROVIDER=minuevo` en tu `.env.local`.
+
+## Competencia: vos, SPY y tres agentes
+
+Abrí **Competencia IA** en el menú o `/competencia`. Esta cuenta es independiente
+ de la cartera de práctica. Son cinco participantes con el mismo capital virtual,
+sin aportes durante 42 días: vos, SPY y los agentes Paciente, Tendencias y Analista.
+
+- **Paciente:** ETFs, hasta 80 % invertido y 20 % por ETF. Guarda los pesos de su
+  primera inversión; luego solo rebalancea desvíos superiores a 5 puntos porcentuales.
+- **Tendencias:** hasta cinco candidatos con rendimiento positivo en 60 ruedas
+  (aproximación de 12 semanas), cierre sobre SMA50 y máximo 20 % por activo.
+- **Analista:** hasta cinco acciones, 20 % por empresa, con tesis, riesgo y condición
+  de salida. Usa solo cotizaciones, múltiplos y titulares entregados; no tiene balances
+  completos ni navegación autónoma.
+- **Esperar es válido:** todos los agentes pueden mantener posiciones o 100 % efectivo.
+  Un fallo de datos o IA conserva la cartera y se registra como error, no como decisión.
+
+### Conexión, inicio y evaluación diaria
+
+1. En `.env.local` configurá `OPENAI_API_KEY` y `OPENAI_MODEL` con un modelo de tu
+   cuenta compatible con Responses y Structured Outputs. No publiques la clave.
+   La API tiene su propia facturación.
+2. Usá `MARKET_DATA_PROVIDER=yahoo` y reiniciá el servidor.
+3. Abrí `/competencia` y elegí el capital. **Podés iniciar incluso con mercado cerrado.**
+   La ronda se programa para la próxima rueda a las **12:00 de Argentina**. Antes de
+   esa fecha nadie puede comprar ni vender; se puede registrar la decisión de esperar.
+   Las seis semanas se cuentan desde esa fecha programada, no desde que pulsás el botón.
+4. Cada agente se evalúa **una vez por día de mercado desde las 12:00 de Argentina**.
+   SPY se compra en la primera evaluación válida. No se duplican llamadas de IA al
+   actualizar la página o ejecutar de nuevo el proceso en la misma fecha argentina.
+   Los fallos del modelo se reintentan en la próxima rueda. No se opera con precios
+   antiguos, en fines de semana o en feriados conocidos por el calendario.
+
+Para actualizar **sin navegador y sin servidor web**, ejecutá:
+
+```bash
+npm run competition:tick
+```
+
+Este proceso lee las mismas carteras guardadas y llama directamente al motor. Un
+bloqueo de disco impide que la web y el proceso escriban simultáneamente. No necesita
+`COMPETITION_ACCESS_TOKEN`; la clave privada de IA se carga desde los archivos de
+entorno locales y nunca se imprime.
+
+La evaluación automática de esta instalación se programa en **Codex a las 12:00 de
+Argentina, todos los días**. La Mac y Codex deben estar encendidos y tener conexión.
+El navegador y el servidor web pueden estar cerrados. Esto no despliega un servicio
+en la nube ni un GitHub Action. En otra computadora hay que configurar sus propias
+variables privadas y programar allí `competition:tick`. Los fines de semana y feriados
+la ejecución conserva las carteras. Si no existe ronda, no crea una automáticamente.
+
+El modo de actualización de la pantalla y `competition:worker` siguen disponibles
+como alternativas con el servidor web encendido; comparten los mismos límites diarios.
+
+Los registros se conservan en `.data/competition.json` (ignorado por Git), mediante
+escrituras atómicas. Se guarda el modelo, información recibida, propuestas, operaciones,
+costos y fotos diarias. **Descargar resultados** permite conservar una copia. La primera
+ronda no se reemplaza desde la interfaz. Las claves y los resultados privados no se suben
+al repositorio. Este backend es para uso local, no para un servicio multiusuario.
+
+### Cómo interpretar el resultado
+
+Se compara patrimonio, rendimiento neto, diferencia en puntos porcentuales frente a
+SPY y caída máxima entre las fotos diarias. Se usa la misma configuración de costos
+para todos (nivel realista), fijada al iniciar. Las operaciones se ejecutan a la última
+cotización reciente con retraso de Yahoo, no a una apertura futura ni como en un broker.
+Se permiten unidades fraccionarias. La comisión de entrada se incluye en el costo de
+las posiciones de competencia.
+
+Esta primera versión compara variaciones de precio: no acredita dividendos ni ajusta
+unidades por splits. Los eventos corporativos pueden distorsionar los resultados.
+El plazo corre incluso durante pausas y desconexiones; al vencer, se conserva la última
+valuación registrada antes del final y se muestra su fecha. El gráfico conserva una referencia inicial y una foto
+por día UTC, por lo que no mide caídas intradiarias. Seis semanas no demuestran superioridad
+estadística. Las decisiones actuales son visibles: es una competencia de aprendizaje,
+no un torneo con decisiones selladas.
+
+Validación local del motor: `npm run test:competition`.

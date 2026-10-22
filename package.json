@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "competition:worker": "node --env-file-if-exists=.env.local scripts/competition-worker.mjs",
+    "test:competition": "node scripts/test-competition.cjs",
+    "competition:tick": "node scripts/competition-tick.cjs"
   },
   "dependencies": {
     "lightweight-charts": "^5.2.1",

@@ -94,6 +94,11 @@ export default function DashboardPage() {
           {fx.source}
         </p>
       )}
+      <Link href="/competencia" className="card block border-accent/40 p-5 hover:bg-bg">
+        <p className="text-xs uppercase tracking-widest text-accent">Nueva competencia</p>
+        <h2 className="mt-2 text-lg font-semibold">Vos vs. SPY vs. tres agentes de IA →</h2>
+        <p className="mt-1 text-sm text-muted">Paciente, Tendencias y Analista. Mismo capital, reglas claras y libertad para esperar.</p>
+      </Link>
       <section>
         <h2 className="mb-3 text-lg font-medium">Mercados</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

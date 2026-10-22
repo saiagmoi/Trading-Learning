@@ -13,6 +13,7 @@ import { useSimulation } from "@/store/simulation-store";
 
 const NAV = [
   { href: "/", label: "Inicio" },
+  { href: "/competencia", label: "Competencia IA" },
   { href: "/mercados", label: "Mercados" },
   { href: "/cartera", label: "Mi cartera" },
   { href: "/historial", label: "Historial" },
@@ -43,7 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-full">
       <QuoteFeed />
-      {hydrated && !onboarded && <Onboarding />}
+      {hydrated && !onboarded && pathname !== "/competencia" && <Onboarding />}
       <div className="sim-banner px-4 py-2 text-center text-xs md:text-sm">
         SIMULACIÓN · No se opera dinero real · No es asesoramiento financiero · Una ganancia pasada
         no garantiza ganancias futuras
