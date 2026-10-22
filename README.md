@@ -226,3 +226,47 @@ estadística. Las decisiones actuales son visibles: es una competencia de aprend
 no un torneo con decisiones selladas.
 
 Validación local del motor: `npm run test:competition`.
+
+
+## Publicar la competencia en Vercel
+
+La competencia ahora soporta Vercel: conserva las carteras en un almacén **privado**
+Vercel Blob y ejecuta una tarea diaria del servidor. No usa el disco efímero de las
+funciones ni necesita que la Mac, Codex o el navegador estén encendidos.
+
+En el proyecto de Vercel:
+
+1. **Storage → Create Database → Blob**: creá/conectá un almacén con acceso **Private**.
+   La conexión debe aportar `BLOB_READ_WRITE_TOKEN` al proyecto (también se admite OIDC
+   con `BLOB_STORE_ID` y `VERCEL_OIDC_TOKEN`). No uses un almacén público.
+2. **Settings → Environment Variables**, para **Production**:
+   - `OPENAI_API_KEY`: clave privada de tu cuenta de API.
+   - `OPENAI_MODEL`: modelo compatible, por ejemplo `gpt-4.1-mini`.
+   - `COMPETITION_ACCESS_TOKEN`: clave aleatoria de acceso a tu competencia, distinta
+     de la clave de OpenAI. La ingresás en la pantalla para ver/operar las carteras.
+   - `CRON_SECRET`: otro secreto aleatorio para autenticar la tarea diaria.
+   - `MARKET_DATA_PROVIDER=yahoo`.
+3. Volvé a desplegar después de conectar almacenamiento o cambiar variables.
+4. Abrí `/competencia`, ingresá tu clave de acceso e iniciá la ronda. Se puede iniciar
+   con mercado cerrado: la primera evaluación se habilita en la próxima rueda a mediodía.
+
+`vercel.json` programa `GET /api/competition/cron` a las **15:00 UTC**, equivalentes a
+las **12:00 de Argentina**, todos los días. Vercel agrega el secreto en Authorization.
+En Hobby, la ejecución puede comenzar dentro de la hora programada; no garantiza el
+minuto exacto. Se ignoran feriados y fines de semana. La evaluación es idempotente por
+fecha argentina y nunca obliga a comprar o vender. No dispares el cron desde el cliente.
+
+La clave de acceso solo se conserva en memoria durante la visita. Los visitantes sin
+clave ven la presentación y el estado de configuración, pero no las carteras ni el diario.
+Los cambios exigen origen válido y autenticación; la tarea diaria tiene autenticación
+separada. Blob usa lecturas consistentes, bloqueo con vencimiento y escrituras condicionales
+por ETag para impedir sobrescrituras entre funciones concurrentes.
+
+Los datos locales no se copian automáticamente a Vercel: esta instalación usa una ronda
+nueva en su almacén privado. Conservá las exportaciones de cualquier ronda local antes de
+migrarla. La automatización local de Codex solo actúa sobre el archivo de tu Mac; no toca
+las carteras publicadas.
+
+Pruebas de producción sin servicios externos: `npm run test:competition:cloud`.
+Documentación: [almacenamiento privado](https://vercel.com/docs/vercel-blob/private-storage)
+y [tareas programadas](https://vercel.com/docs/cron-jobs/manage-cron-jobs).

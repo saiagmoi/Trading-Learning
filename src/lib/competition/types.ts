@@ -68,4 +68,11 @@ export interface CompetitionView {
   connection: { ready: boolean; keyConfigured: boolean; modelConfigured: boolean; model: string | null };
   marketOpen: boolean;
   now: string;
+  setup?: {
+    hosted: boolean;
+    storageReady: boolean;
+    accessConfigured: boolean;
+    authorized: boolean;
+    cronConfigured: boolean;
+  };
 }

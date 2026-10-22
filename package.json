@@ -9,11 +9,13 @@
     "lint": "eslint",
     "competition:worker": "node --env-file-if-exists=.env.local scripts/competition-worker.mjs",
     "test:competition": "node scripts/test-competition.cjs",
-    "competition:tick": "node scripts/competition-tick.cjs"
+    "competition:tick": "node scripts/competition-tick.cjs",
+    "test:competition:cloud": "node scripts/test-competition-cloud.cjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "lightweight-charts": "^5.2.1",
-    "next": "16.4.0",
+    "next": "^16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "yahoo-finance2": "^4.0.3",
@@ -25,7 +27,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "^16.4.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

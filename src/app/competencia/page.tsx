@@ -12,6 +12,8 @@ const LABELS = { buy: "Compra", sell: "Venta", hold: "Espera", error: "Sin ejecu
 export default function CompetitionPage() {
   const [data, setData] = useState<CompetitionView | null>(null);
   const [error, setError] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [accessInput, setAccessInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [capital, setCapital] = useState("10000");
   const [auto, setAuto] = useState(false);
@@ -27,7 +29,7 @@ export default function CompetitionPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/competition", { cache: "no-store" })
+    fetch("/api/competition", { cache: "no-store", headers: accessToken ? { "x-competition-token": accessToken } : {} })
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body.error);
@@ -35,18 +37,18 @@ export default function CompetitionPage() {
       })
       .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "No se pudo cargar la competencia."); });
     return () => { cancelled = true; };
-  }, []);
+  }, [accessToken]);
   const act = useCallback(async (input: object) => {
     if (inFlight.current) return;
     inFlight.current = true; setBusy(true); setError("");
     try {
-      const res = await fetch("/api/competition", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+      const res = await fetch("/api/competition", { method: "POST", headers: { "Content-Type": "application/json", ...(accessToken ? { "x-competition-token": accessToken } : {}) }, body: JSON.stringify(input) });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error);
       setData(body); setConfirm(false);
     } catch (e) { setError(e instanceof Error ? e.message : "No se pudo completar la acción."); }
     finally { setBusy(false); inFlight.current = false; }
-  }, []);
+  }, [accessToken]);
   useEffect(() => {
     if (!auto || c?.status !== "active") return;
     const timer = setInterval(() => void act({ action: "review" }), 60_000);
@@ -84,16 +86,33 @@ export default function CompetitionPage() {
 
     {error && <p role="alert" className="rounded-xl border border-loss/40 bg-loss/10 p-3 text-sm text-loss">{error}</p>}
     {!data && !error && <p className="text-muted" role="status">Cargando competencia…</p>}
+    {data?.setup?.hosted && (!data.setup.storageReady || !data.setup.accessConfigured || !data.setup.cronConfigured) && <section className="card border-warn/40 p-5">
+      <h2 className="font-semibold text-warn">Terminá de conectar la competencia en Vercel</h2>
+      <p className="mt-2 text-sm text-muted">La web ya admite acceso desde internet. Falta completar la configuración privada del proyecto para guardar tus carteras y actualizarlas con la computadora apagada.</p>
+      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted">
+        {!data.setup.storageReady && <li>En Storage, conectá un almacén Vercel Blob de acceso <strong>privado</strong>. Vercel agregará la conexión al proyecto.</li>}
+        {!data.setup.accessConfigured && <li>Agregá COMPETITION_ACCESS_TOKEN en las variables de entorno: es una clave de acceso que elegís para esta competencia, distinta de tu clave de OpenAI.</li>}
+        {!data.setup.cronConfigured && <li>Agregá CRON_SECRET con un valor aleatorio privado para proteger la actualización diaria.</li>}
+      </ul>
+      <p className="mt-3 text-sm text-muted">Guardá los cambios para Production y volvé a desplegar el proyecto. No pegues claves en GitHub.</p>
+      <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-accent">Abrir Vercel →</a>
+    </section>}
+    {data?.setup?.hosted && data.setup.accessConfigured && !data.setup.authorized && <form className="card p-5" onSubmit={(event) => { event.preventDefault(); setError(""); setAccessToken(accessInput); setAccessInput(""); }}>
+      <h2 className="font-semibold">Entrá a tu competencia</h2>
+      <p className="mt-2 text-sm text-muted">Ingresá la clave de acceso de esta competencia. No es tu clave de API de OpenAI. Solo permanece en memoria durante esta visita.</p>
+      <label className="mt-3 block text-sm">Clave de acceso<input type="password" autoComplete="current-password" value={accessInput} onChange={(e) => setAccessInput(e.target.value)} className="mt-1 block w-full max-w-md rounded-xl border border-line bg-bg px-3 py-2" /></label>
+      <button type="submit" disabled={!accessInput} className="mt-3 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">Entrar</button>
+    </form>}
     {data && !data.connection.ready && <section className="card border-warn/40 p-5">
       <h2 className="font-semibold text-warn">Falta conectar la IA para empezar</h2>
       <p className="mt-2 text-sm text-muted">Los tres agentes y sus reglas están preparados. Para tomar decisiones reales necesitan una conexión de IA en el servidor. No se generan respuestas ficticias mientras falta esa conexión.</p>
-      <details className="mt-3 text-sm"><summary className="cursor-pointer text-accent">Cómo conectar los agentes</summary><p className="mt-2 text-muted">En el archivo .env.local del proyecto, configurá OPENAI_API_KEY y OPENAI_MODEL con una clave y un modelo de tu cuenta de API compatible con respuestas estructuradas. Reiniciá la aplicación. La clave queda en el servidor; nunca la pegues en el chat ni en el navegador. El uso de la API tiene su propia facturación.</p></details>
+      <details className="mt-3 text-sm"><summary className="cursor-pointer text-accent">Cómo conectar los agentes</summary><p className="mt-2 text-muted">Configurá OPENAI_API_KEY y OPENAI_MODEL en las variables de entorno del proyecto en Vercel y volvé a desplegar. En uso local, esas variables van en .env.local. La clave queda en el servidor; nunca la pegues en el chat ni en el navegador. El uso de la API tiene su propia facturación.</p></details>
     </section>}
 
-    {!c && data && <section className="card p-5">
+    {!c && data && data.setup?.authorized !== false && <section className="card p-5">
       <h2 className="text-lg font-semibold">Una salida igual para todos</h2>
       <p className="mt-2 text-sm text-muted">Se crea una cuenta nueva para vos, SPY y cada agente. Tu cartera de práctica habitual queda separada. No se permiten aportes durante la ronda.</p>
-      <div className="mt-4 flex flex-wrap items-end gap-3"><label className="text-sm">Capital virtual por participante (USD)<input type="number" min="100" max="1000000" value={capital} onChange={(e) => setCapital(e.target.value)} className="mt-1 block rounded-xl border border-line bg-bg px-3 py-2" /></label><button disabled={busy || !data.connection.ready} onClick={() => void act({ action: "start", capital: Number(capital) })} className="rounded-xl bg-accent px-5 py-2.5 font-semibold text-white disabled:opacity-40">{busy ? "Preparando…" : "Iniciar ronda de 6 semanas"}</button></div>
+      <div className="mt-4 flex flex-wrap items-end gap-3"><label className="text-sm">Capital virtual por participante (USD)<input type="number" min="100" max="1000000" value={capital} onChange={(e) => setCapital(e.target.value)} className="mt-1 block rounded-xl border border-line bg-bg px-3 py-2" /></label><button disabled={busy || !data.connection.ready || data.setup?.storageReady === false || (data.setup?.hosted && !data.setup.cronConfigured)} onClick={() => void act({ action: "start", capital: Number(capital) })} className="rounded-xl bg-accent px-5 py-2.5 font-semibold text-white disabled:opacity-40">{busy ? "Preparando…" : "Iniciar ronda de 6 semanas"}</button></div>
       <p className="mt-3 text-xs text-muted">Podés iniciar con el mercado cerrado. Las inversiones se habilitan en la próxima rueda a las 12:00 de Argentina. Hasta entonces, todos esperan en efectivo.</p>
     </section>}
 
@@ -127,7 +146,7 @@ export default function CompetitionPage() {
       <p>Los cinco participantes empiezan con el mismo capital en USD. SPY aproxima al S&P 500: compra una vez y mantiene. Vos podés operar o esperar; los tres agentes se evalúan cada día de mercado desde las 12:00 de Argentina. No hay compras o ventas obligatorias.</p>
       <p>Todos usan los mismos costos: 0,1 % de comisión, mínimo USD 1 por operación, spread de 5 puntos básicos y deslizamiento de 2 puntos básicos. No hay aportes, préstamos ni ventas en corto. Los agentes tienen como máximo cinco posiciones y 20 % por posición al asignar; los pesos pueden variar después con el mercado.</p>
       <p>Las operaciones se simulan con la última cotización reciente de Yahoo, que puede tener retraso. No son ejecuciones de un broker ni órdenes a la próxima apertura. Los resultados son variaciones de precio netas de los costos simulados: esta versión no acredita dividendos ni ajusta las unidades de la cartera por splits. Un evento corporativo puede distorsionar la comparación.</p>
-      <p>Las carteras y decisiones se guardan en el equipo que ejecuta la aplicación, incluso si cerrás el navegador. La evaluación diaria puede ejecutarse sin abrir esta página ni iniciar el servidor web: el proceso “competition:tick” trabaja directamente con las carteras guardadas. La automatización local de Codex se programa a las 12:00 de Argentina. La Mac y Codex deben estar encendidos y con conexión; no es un servicio en la nube.</p>
+      <p>{data?.setup?.hosted ? "En Vercel, las carteras se guardan en almacenamiento privado persistente. La tarea diaria se ejecuta en la nube desde las 12:00 de Argentina: no necesitás abrir esta web ni mantener tu Mac encendida. En el plan Hobby puede comenzar dentro de la hora programada, según Vercel." : "En uso local, las carteras se guardan en esta computadora. La automatización local de Codex necesita la Mac encendida; la versión publicada en Vercel usa su propio almacenamiento privado y tarea diaria."}</p>
       <p>Los datos y titulares disponibles se envían al modelo configurado; la respuesta se valida antes de operar. Si faltan datos, falla el modelo o se incumplen reglas, se conserva la cartera y se registra el motivo. Los fallos se reintentan en la próxima rueda. La selección de modelo se fija al iniciar la ronda.</p>
       <p>Las seis semanas se cuentan desde la fecha programada para la primera rueda. El plazo sigue corriendo durante pausas o desconexiones. Al finalizar se conserva la última valuación registrada antes del fin, con su fecha visible. Se guardan fotos diarias; no se reconstruyen decisiones perdidas. Seis semanas sirven para observar esta ronda, no para probar superioridad de una estrategia.</p>
     </div></details>
